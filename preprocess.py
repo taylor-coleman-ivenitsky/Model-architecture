@@ -33,7 +33,7 @@ for i in range(1, 2): #TODO: change upperbound to 89143 after debugging to get a
     image = np.asarray(image)
 
     #convert to grayscale using standard NTSC formula
-    gray_image = [:,:,0] * NTSC_formula[0] * [:,:,1] * NTSC_formula[1] + [:,:,2] * NTSC_formula[2]
+    gray_image = [:,:,0] * NTSC_formula[0] + [:,:,1] * NTSC_formula[1] + [:,:,2] * NTSC_formula[2]
 
     results.append((gray_image, date, caption))
 
