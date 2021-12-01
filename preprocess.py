@@ -1,41 +1,69 @@
-from bs4 import BeautifulSoup
-import requests
 import time
 import numpy as np
 from PIL import Image
 import pandas as pd
+from selenium import webdriver
 
-URL_START = 'https://www.archinform.net/projekte/'
-URL_END = '.htm'
+def preprocess():
+    URL_START = 'https://www.archinform.net/projekte/'
+    URL_END = '.htm'
 
-NTSC_formula = [0.299, 0.587, 0.114] #used for grayscale conversion
-results = []
+    browser = webdriver.Chrome()
 
-for i in range(1, 2): #TODO: change upperbound to 89143 after debugging to get all images
-    CURR_URL = URL_START + str(i) + URL_END
+    NTSC_formula = [0.299, 0.587, 0.114] #used for grayscale conversion
+    dates = []
+    images = []
 
-    r = requests.get(CURR_URL)
-    r.raise_for_status()
+    for i in range(1, 89143): #TODO: adjust back to 1
+        CURR_URL = URL_START + str(i) + URL_END
 
-    soup = BeautifulSoup(r.text, 'html.parser')
-    imageInfo = soup.find('body')
+        browser.get(CURR_URL)
+        time.sleep(2) 
 
-    #TODO: populate these after getting HTML that makes sense
-    date = ?
-    image = ? #stored on website as jpg
-    caption = ?
+        image = browser.find_elements_by_xpath('//div[@class="slick-slide slick-current slick-active slick-center"]')
+        image_path = 'Images/image' + str(i) + '.png'
 
-    #preprocess date text to standardized format
-    date = int(date) #converts year from string to integer
+        if len(image) < 1:
+            continue #only process the building if image data is available 
 
-    #reshaping - assuming for now that they are the same size but can add reshaping in pretty easily later if necessary
-    image = Image.open(image)
-    image = np.asarray(image)
+        #get html for the table that stores date information for the building
+        date_table = browser.find_elements_by_id('MenueCHROChild')
 
-    #convert to grayscale using standard NTSC formula
-    gray_image = [:,:,0] * NTSC_formula[0] + [:,:,1] * NTSC_formula[1] + [:,:,2] * NTSC_formula[2]
+        #to get date, split on whitespace, take first four characters of third word, or fourth if "ca." is present
+        if len(date_table) <= 0: 
+            continue #skip processing on any images without date
 
-    results.append((gray_image, date, caption))
+        if date_table[0].text.split()[2][0:3] == "ca.": #account for date format "ca. 1998"
+            date = date_table[0].text.split()[3][0:4]
+        else:
+            date = date_table[0].text.split()[2][0:4]
 
-#store data in file so that preprocessing only needs to be run once
-pd.DataFrame(results).to_csv('data.csv')
+        if not date.isnumeric(): 
+            continue #skip processing on any images with incorrect date format
+
+        dates.append(date) 
+
+        #saves image to the Images directory
+        image[0].screenshot(image_path) 
+
+        #convert image to array
+        image = Image.open(image_path)
+        image = np.asarray(image)
+
+        #convert to grayscale using standard NTSC formula
+        gray_image = image[:,:,0] * NTSC_formula[0] + image[:,:,1] * NTSC_formula[1] + image[:,:,2] * NTSC_formula[2]
+
+        #TODO: crop image by removing some of the top and bottom rows
+
+        #rewrite grayscale, cropped image to Images folder to manually verify grayscale conversion and cropping
+        gray_image_check = Image.fromarray(gray_image)
+        gray_image_check = gray_image_check.convert("L") #reduces image from 3 to 1 channel (R, G, B) -> (B/W)
+        gray_image_path = 'Images/image' + str(i) + 'grey.jpeg'
+        gray_image_check.save(gray_image_path)
+
+        images.append(gray_image)
+
+    print("dates", dates)
+    return (images, dates)
+
+preprocess()
