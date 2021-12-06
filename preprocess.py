@@ -4,33 +4,33 @@ from PIL import Image
 import pandas as pd
 from selenium import webdriver
 
-def preprocess():
+def preprocess(i):
     URL_START = 'https://www.archinform.net/projekte/'
     URL_END = '.htm'
 
-    browser = webdriver.Chrome()
+    browser = webdriver.Chrome(executable_path='/Users/taylorcoleman/PycharmProjects/scraper/venv/lib/python3.7/site-packages/selenium/webdriver/chrome/chromedriver')
 
     NTSC_formula = [0.299, 0.587, 0.114] #used for grayscale conversion
     dates = []
     images = []
 
-    for i in range(1, 89143): #TODO: adjust back to 1
+    for i in range(i, i+120): #TODO: adjust back to 1
         CURR_URL = URL_START + str(i) + URL_END
 
         browser.get(CURR_URL)
-        time.sleep(2) 
+        time.sleep(1)
 
         image = browser.find_elements_by_xpath('//div[@class="slick-slide slick-current slick-active slick-center"]')
         image_path = 'Images/image' + str(i) + '.png'
 
         if len(image) < 1:
-            continue #only process the building if image data is available 
+            continue #only process the building if image data is available
 
         #get html for the table that stores date information for the building
         date_table = browser.find_elements_by_id('MenueCHROChild')
 
         #to get date, split on whitespace, take first four characters of third word, or fourth if "ca." is present
-        if len(date_table) <= 0: 
+        if len(date_table) <= 0:
             continue #skip processing on any images without date
 
         if date_table[0].text.split()[2][0:3] == "ca.": #account for date format "ca. 1998"
@@ -38,13 +38,13 @@ def preprocess():
         else:
             date = date_table[0].text.split()[2][0:4]
 
-        if not date.isnumeric(): 
+        if not date.isnumeric():
             continue #skip processing on any images with incorrect date format
 
-        dates.append(date) 
+        dates.append(date)
 
         #saves image to the Images directory
-        image[0].screenshot(image_path) 
+        image[0].screenshot(image_path)
 
         #convert image to array
         image = Image.open(image_path)
@@ -63,7 +63,11 @@ def preprocess():
 
         images.append(gray_image)
 
+    datefile = open("/dates.txt","a")
+    datefile.write(i, i+120, str(dates))
+    datefile.close()
     print("dates", dates)
     return (images, dates)
 
-preprocess()
+for i in range(1920, 89143, 120):
+    preprocess(i)
