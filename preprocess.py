@@ -8,13 +8,14 @@ def preprocess(i):
     URL_START = 'https://www.archinform.net/projekte/'
     URL_END = '.htm'
 
-    browser = webdriver.Chrome(executable_path='/Users/taylorcoleman/PycharmProjects/scraper/venv/lib/python3.7/site-packages/selenium/webdriver/chrome/chromedriver')
+    #browser = webdriver.Chrome(executable_path='/Users/taylorcoleman/PycharmProjects/scraper/venv/lib/python3.7/site-packages/selenium/webdriver/chrome/chromedriver')
+    browser = webdriver.Chrome()
 
     NTSC_formula = [0.299, 0.587, 0.114] #used for grayscale conversion
     dates = []
     images = []
 
-    for i in range(i, i+120): #TODO: adjust back to 1
+    for i in range(i, i+120): 
         CURR_URL = URL_START + str(i) + URL_END
 
         browser.get(CURR_URL)
@@ -60,14 +61,17 @@ def preprocess(i):
         gray_image_check = gray_image_check.convert("L") #reduces image from 3 to 1 channel (R, G, B) -> (B/W)
         gray_image_path = 'Images/image' + str(i) + 'grey.jpeg'
         gray_image_check.save(gray_image_path)
+        datefile.write(str(i) + ", " + '\n')
 
         images.append(gray_image)
 
-    datefile = open("/dates.txt","a")
-    datefile.write(i, i+120, str(dates))
-    datefile.close()
-    print("dates", dates)
+    # datefile = open("/dates.txt","a")
+    # datefile.write(i, i+120, str(dates))
+    # datefile.close()
+    # print("dates", dates)
     return (images, dates)
 
-for i in range(1920, 89143, 120):
+datefile = open("dates.txt", "w")
+for i in range(1, 40000, 120):
     preprocess(i)
+datefile.close()
