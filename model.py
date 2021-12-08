@@ -9,9 +9,9 @@ class Model(tf.keras.Model):
         self.loss_list = []
 
         #resize images to 224x224 because that is default input size for VGG
-        self.VGG16 = tf.keras.applications.VGG16(include_top=True, classes=self.num_classes, classifier_activation=None)
+        self.VGG16 = tf.keras.applications.VGG16(include_top=False, classes=self.num_classes, classifier_activation=None)
         self.dense1 = tf.keras.layers.Dense(1000, activation="relu")
-        self.dense2 = tf.keras.layers.Dense(num_classes, activation="softmax")
+        self.dense2 = tf.keras.layers.Dense(self.num_classes, activation="softmax")
 
         self.optimizer = tf.keras.optimizer.Adam(learning_rate=0.01)
 
@@ -65,17 +65,20 @@ def test(model, test_images, test_dates):
     return tf.reduce_mean(accuracy)
 
 def main():
-    #TODO: read in dates array
-    all_dates = ?
-    #TODO: read in images
-    all_images = ?
-    #TODO: resize all Images
-    #TODO: split to train/test 80/20 - use batching function for this too? shuffle first?
+    print("running main")
+    #read in train images, train dates, test images, test dates
+    test_images = np.load('test_img.npy')
+    print("test images shape is ", test_images.shape)
+    test_dates = np.load('test_lab.npy')
+    print("test date shape is ", test_dates.shape)
+    train_images = np.load('train_img.npy')
+    print("train images shape is ", train_images.shape)
+    train_dates = np.load('train_lab.npy')
+    print("train_dates shape is ", train_dates.shape)
 
     model = Model()
 
-
-    num_epochs = 20 #NOTE: tune
+    num_epochs = 1 #NOTE: tune
     for epoch in range(num_epochs):
         train(model, train_images, train_dates) #NOTE: returns loss, can check values
 
@@ -85,8 +88,10 @@ def main():
     #NOTE: can also look at train accuracy if we want to to help tune model
 
 def get_batch(start_index, batch_size, images, dates):
-    ending_index = starting_index + batch_size
-    return (images[starting_index: ending_index], dates[starting_index: ending_index])
+    ending_index = start_index + batch_size
+    return (images[start_index: ending_index], dates[start_index: ending_index])
 
-if __name__ == 'main':
-    main()
+# if __name__ == 'main':
+#     main()
+
+main()
