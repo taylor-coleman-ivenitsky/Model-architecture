@@ -15,7 +15,6 @@ def preprocess(i):
     dates = []
     images = []
 
-    #for i in range(i, i+120): 
     for i in range(i, i+120): 
         CURR_URL = URL_START + str(i) + URL_END
 
@@ -55,13 +54,12 @@ def preprocess(i):
         #convert to grayscale using standard NTSC formula
         gray_image = image[:,:,0] * NTSC_formula[0] + image[:,:,1] * NTSC_formula[1] + image[:,:,2] * NTSC_formula[2]
 
-        #TODO: crop image by removing some of the top and bottom rows
-
         #rewrite grayscale, cropped image to Images folder to manually verify grayscale conversion and cropping
         gray_image_check = Image.fromarray(gray_image)
         gray_image_check = gray_image_check.convert("L") #reduces image from 3 to 1 channel (R, G, B) -> (B/W)
         gray_image_path = 'Images/image' + str(i) + 'grey.jpeg'
         gray_image_check.save(gray_image_path)
+
         datefile.write(str(i) + ", " + date + '\n')
 
         images.append(gray_image)
@@ -69,7 +67,9 @@ def preprocess(i):
     return (images, dates)
 
 datefile = open("dates.txt","a")
-#NOTE: changed from 1920, 89143, 120
+
+#NOTE: change for given images range
 for i in range(3414, 3500, 120):
     preprocess(i)
+
 datefile.close()
