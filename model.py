@@ -31,12 +31,13 @@ class Model(tf.keras.Model):
         return tf.reduce_mean(tf.cast(correct_predictions, tf.float32))
 
 def train(model, train_images, train_dates):
+    total_number_images_training = len(train_images)
     num_batches = total_number_images_training/model.batch_size
     #Note: not shuffling for now, might incorporate later
 
     #run one epoch
     for i in range(num_batches):
-        batch_images, batch_dates = get_batch(i, model.batch_size, train_images, train_labels)
+        batch_images, batch_dates = get_batch(i, model.batch_size, train_images, train_dates)
 
         with tf.GradientTape() as tape:
             probabilities = model.call(batch_images)
@@ -51,6 +52,7 @@ def train(model, train_images, train_dates):
 def test(model, test_images, test_dates):
     probabilities = []
     accuracy = []
+    total_number_images_testing = test_images.shape[0]
 
     num_batches = total_number_images_testing/model.batch_size
 
