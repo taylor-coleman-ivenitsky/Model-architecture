@@ -3,6 +3,7 @@ import tensorflow as tf
 from PIL import Image
 import random
 
+#this file performs processing such as date parsing, replacing dates with classes, and train test split
 def process():
 
   train_image = []
@@ -38,12 +39,9 @@ def process():
     img = Image.open(image)
     arr_img = np.array(img)
     arr_img = arr_img[...,:3]
-    #x = np.shape(arr_img)[0]
-    #y = np.shape(arr_img)[1]
     arr_img = tf.convert_to_tensor(arr_img)
-    #arr_img = tf.reshape(arr_img, [x,y,3])
 
-    #resize the image to the standard size for VGG
+    #resize the image to the standard size for image classifier
     res_image = tf.image.resize(arr_img, [224,224], method="lanczos3")
 
     #switch out the dates for the class labels in the dictionary
@@ -71,7 +69,6 @@ def process():
       train_labels.append(label)
 
   traini = np.array(train_image)
-  print(traini.shape)
   testi = np.array(test_image)
   trainl = np.array(train_labels)
   testl = np.array(test_labels)

@@ -4,11 +4,11 @@ from PIL import Image
 import pandas as pd
 from selenium import webdriver
 
+#this file performs web scraping and basic preprocessing 
 def preprocess(i):
     URL_START = 'https://www.archinform.net/projekte/'
     URL_END = '.htm'
 
-    #browser = webdriver.Chrome(executable_path='/Users/taylorcoleman/PycharmProjects/scraper/venv/lib/python3.7/site-packages/selenium/webdriver/chrome/chromedriver')
     browser = webdriver.Chrome()
 
     NTSC_formula = [0.299, 0.587, 0.114] #used for grayscale conversion
@@ -66,10 +66,9 @@ def preprocess(i):
 
     return (images, dates)
 
-datefile = open("dates.txt","a")
+datefile = open("all_dates.txt","a")
 
-#NOTE: change for given images range
-for i in range(3414, 3500, 120):
+for i in range(1, 89142, 120):
     preprocess(i)
 
 datefile.close()

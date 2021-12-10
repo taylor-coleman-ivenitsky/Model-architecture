@@ -1,16 +1,20 @@
 import tensorflow as tf
 import numpy as np
+from PIL import Image
 
 class Model(tf.keras.Model):
     def __init__(self):
         super(Model, self).__init__()
+
+        self.print_img = True
+        self.testing = True
+
         self.batch_size = 1
         self.num_classes = 6 #(before 1800s, 1800-1900, 1900-1920, 1920-1940, 1940-1960, 1960-on )
         self.loss_list = []
 
         self.dense1size = 1000
 
-        #resize images to 224x224 because that is default input size for VGG
         self.mnet2 = tf.keras.applications.MobileNetV2(include_top=False, alpha=.75, weights='imagenet', classes=self.num_classes, classifier_activation=None)
         self.dense1 = tf.keras.layers.Dense(self.dense1size, activation="sigmoid")
         self.dense2 = tf.keras.layers.Dense(self.num_classes, activation="softmax")
@@ -22,7 +26,7 @@ class Model(tf.keras.Model):
     def call(self, inputs):
         inputs = inputs/255.0
         output = self.mnet2(inputs)
-        output = self.flatten(output)
+        output = self.flatten(output)    
         output = self.dropout(output)
         output = self.dense1(output)
         return self.dense2(output)
@@ -34,16 +38,16 @@ class Model(tf.keras.Model):
 
     def accuracy(self, probabilities, labels):
         argmax = tf.argmax(probabilities, axis=-1)
+
         #Checks if the class with highest probability is the same as the true class
         correct_predictions = tf.equal(argmax, labels)
+
         #What portion of predictions are correct
         return tf.reduce_mean(tf.cast(correct_predictions, tf.float32))
 
 def train(model, train_images, train_dates):
     total_number_images_training = np.shape(train_images)[0]
     num_batches = total_number_images_training//model.batch_size
-    print(total_number_images_training)
-    #Note: not shuffling for now, might incorporate later
 
     #run one epoch
     for i in range(num_batches):
@@ -68,6 +72,7 @@ def test(model, test_images, test_dates):
     num_batches = total_number_images_testing//model.batch_size
 
     for i in range(num_batches):
+        print("test", i, num_batches)
         batch_images, batch_dates = get_batch(i, model.batch_size, test_images, test_dates)
         probability = model.call(batch_images)
         probabilities.append(probability)
@@ -79,6 +84,7 @@ def test(model, test_images, test_dates):
 
 def main():
     print("running main")
+
     #read in train images, train dates, test images, test dates
     test_images = np.load('test_img.npy')
     test_dates = np.load('test_lab.npy')
@@ -87,13 +93,18 @@ def main():
 
     model = Model()
 
-    num_epochs = 1 #NOTE: tune
+    num_epochs = 10 
     for epoch in range(num_epochs):
+        print("epoch ", epoch)
         train(model, train_images, train_dates) 
+        accuracy = test(model, test_images, test_dates)
 
-    accuracy = test(model, test_images, test_dates)
+        #write accuracy to file for each epoch for tuning 
+        file = open("accuracy_by_epoch.txt", "a")
+        string = "epoch = " + str(epoch) + ", accuracy = " + str(accuracy) + '\n'
+        file.write(string)
 
-    print("test accuracy is ", accuracy)
+    print("overall test accuracy is ", accuracy)
 
 
 def get_batch(start_index, batch_size, images, dates):
